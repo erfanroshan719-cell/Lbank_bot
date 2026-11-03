@@ -52,30 +52,37 @@ def check_ema_signals():
                 df['EMA_100'] = df['close'].ewm(span=100, adjust=False).mean()
                 df['EMA_200'] = df['close'].ewm(span=200, adjust=False).mean()
                 
-                # بررسی کندل بسته شده قبلی (اندیس ۲- از آخر)
+                # بررسی کندل جاری (آخرین کندل در حال شکل‌گیری) و کندل قبلی (کامل‌شده)
+                current_candle = df.iloc[-1]
                 prev_candle = df.iloc[-2]
-                low = prev_candle['low']
-                ema100, ema200 = prev_candle['EMA_100'], prev_candle['EMA_200']
                 
-                touched_ema100 = (low <= ema100)
-                touched_ema200 = (low <= ema200)
+                symbol_messages = []
                 
-                msg_detail = ""
-                if touched_ema100: msg_detail = f"برخورد با EMA 100 📉 (قیمت پایین: {low}, مقدار EMA: {ema100:.2f})"
-                elif touched_ema200: msg_detail = f"برخورد با EMA 200 📉 (قیمت پایین: {low}, مقدار EMA: {ema200:.2f})"
+                # بررسی کندل جاری
+                if current_candle['low'] <= current_candle['EMA_100']:
+                    symbol_messages.append(f"• کندل جاری: برخورد با EMA 100 📉 (کف: {current_candle['low']}, مقدار: {current_candle['EMA_100']:.2f})")
+                elif current_candle['low'] <= current_candle['EMA_200']:
+                    symbol_messages.append(f"• کندل جاری: برخورد با EMA 200 📉 (کف: {current_candle['low']}, مقدار: {current_candle['EMA_200']:.2f})")
                 
-                if msg_detail:
-                    signals_found.append(f"🔹 *{symbol}*\n{msg_detail}")
+                # بررسی کندل قبلی
+                if prev_candle['low'] <= prev_candle['EMA_100']:
+                    symbol_messages.append(f"• کندل قبلی: برخورد با EMA 100 📉 (کف: {prev_candle['low']}, مقدار: {prev_candle['EMA_100']:.2f})")
+                elif prev_candle['low'] <= prev_candle['EMA_200']:
+                    symbol_messages.append(f"• کندل قبلی: برخورد با EMA 200 📉 (کف: {prev_candle['low']}, مقدار: {prev_candle['EMA_200']:.2f})")
+                
+                if symbol_messages:
+                    details_str = "\n".join(symbol_messages)
+                    signals_found.append(f"🔹 *{symbol}*\n{details_str}")
                 
                 time.sleep(exchange.rateLimit / 1000)
             except Exception:
                 continue
 
         if signals_found:
-            header = "🚨 گزارش سیگنال‌های فیوچرز LBank 🚨\n\n" + "\n".join(signals_found)
+            header = "🚨 گزارش سیگنال‌های فیوچرز LBank 🚨\n\n" + "\n\n".join(signals_found)
             send_telegram_message(header)
         else:
-            status_message = "🤖 **گزارش ربات LBank**\n\nبازار ۴ ساعته اسکن شد. در حال حاضر هیچ برخورد با EMA 100 یا EMA 200 یافت نشد."
+            status_message = "🤖 **گزارش ربات LBank**\n\nبازار ۴ ساعته (کندل جاری و قبلی) اسکن شد. در حال حاضر هیچ برخوردی با EMA 100 یا EMA 200 یافت نشد."
             send_telegram_message(status_message)
 
     except Exception as e:
