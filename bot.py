@@ -38,17 +38,17 @@ def check_ema_signals():
         exchange.load_markets()
         symbols = []
         for symbol, market in exchange.markets.items():
-            if market.get('linear', False) and market.get('quote') == 'USDT':
+         if market.get('linear', False) and market.get('quote') == 'USDT':
                 symbols.append(symbol)
         
-        if not symbols:
+    if not symbols:
             symbols = [s for s in exchange.symbols if exchange.markets[s].get('swap', False)]
 
         signals_found = []
         for symbol in symbols:
             try:
                 ohlcv = exchange.fetch_ohlcv(symbol, timeframe='4h', limit=300)
-                if len(ohlcv) < 200:
+          if len(ohlcv) < 200:
                     continue
                 
                 df = pd.DataFrame(ohlcv, columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
@@ -63,8 +63,8 @@ def check_ema_signals():
                 touched_ema200 = (low <= ema200 <= high) or (abs(close - ema200) / ema200 < 0.001)
                 
                 msg_detail = ""
-                if touched_ema100: msg_detail = "EMA 100"
-                elif touched_ema200: msg_detail = "EMA 200"
+           if touched_ema100: msg_detail = "EMA 100"
+                  elif touched_ema200: msg_detail = "EMA 200"
                 
                 if msg_detail:
                     signals_found.append(f"🚨 {symbol} | برخورد با {msg_detail} | قیمت: {close}\n")
@@ -73,13 +73,14 @@ def check_ema_signals():
             except:
                 continue
                 
-        if signals_found:
-        header = "🚨 گزارش سیگنال‌های فیوچرز LBank 🚨\n\n" + "\n".join(signals_found)
-        send_telegram_message(header)
+    if signals_found:
+              header = "🚨 گزارش سیگنال‌های فیوچرز LBank 🚨\n\n" + "\n".join(signals_found)
+             send_telegram_message(header)
+
     else:
-        # این بخش گزارش می‌دهد که ربات بازار را اسکن کرده و فعلاً سیگنالی نبوده
-        status_message = "🤖 **گزارش ربات LBank**\n\nبازار ۴ ساعته اسکن شد. در حال حاضر هیچ برخورد با EMA 100 یا EMA 200 یافت نشد."
-        send_telegram_message(status_message)
+          # این بخش گزارش می‌دهد که ربات بازار را اسکن کرده و فعلاً سیگنالی نبوده
+          status_message = "🤖 **گزارش ربات LBank**\n\nبازار ۴ ساعته اسکن شد. در حال حاضر هیچ برخورد با EMA 100 یا EMA 200 یافت نشد."
+          send_telegram_message(status_message)
 
 if __name__ == "__main__":
-    check_ema_signals()
+      check_ema_signals()
