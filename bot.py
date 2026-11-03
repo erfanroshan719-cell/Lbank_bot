@@ -74,10 +74,12 @@ def check_ema_signals():
                 continue
                 
         if signals_found:
-            header = f"📊 گزارش سیگنال های فیوچرز LBank (تایم 4h)\nتعداد کل: {len(signals_found)}\n\n"
-            send_telegram_message(header + "".join(signals_found))
-    except Exception as e:
-        print(f"خطا: {e}")
+        header = "🚨 گزارش سیگنال‌های فیوچرز LBank 🚨\n\n" + "\n".join(signals_found)
+        send_telegram_message(header)
+    else:
+        # این بخش گزارش می‌دهد که ربات بازار را اسکن کرده و فعلاً سیگنالی نبوده
+        status_message = "🤖 **گزارش ربات LBank**\n\nبازار ۴ ساعته اسکن شد. در حال حاضر هیچ برخورد با EMA 100 یا EMA 200 یافت نشد."
+        send_telegram_message(status_message)
 
 if __name__ == "__main__":
     check_ema_signals()
