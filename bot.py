@@ -79,5 +79,5 @@ def check_ema_signals():
     except Exception as e:
         print(f"خطا: {e}")
 
-if name == "__main__":
+if __name__ == "__main__":
     check_ema_signals()
