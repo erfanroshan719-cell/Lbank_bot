@@ -4,7 +4,6 @@ import ccxt
 import pandas as pd
 import requests
 
-# اطلاعات از GitHub Secrets خوانده می‌شود
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
 
@@ -31,28 +30,31 @@ def check_ema_signals():
             'enableRateLimit': True,
         })
         
-        # بارگذاری بازار فیوچرز
         exchange.load_markets()
+        # فیلتر نمادهای فیوچرز USDT
         symbols = [symbol for symbol in exchange.symbols if '/USDT:USDT' in symbol]
+        
+        print(f"تعداد کل نمادهای فیوچرز یافت شده: {len(symbols)}")
         
         if not symbols:
             print("هیچ نماد فیوچرز USDT یافت نشد.")
+            send_telegram_message("⚠️ ربات هشدار: هیچ نماد فیوچرز USDT برای اسکن یافت نشد!")
             return
 
         signals_found = []
+        checked_count = 0
 
         for symbol in symbols:
             try:
-                # دریافت کندل‌های ۴ ساعته
                 ohlcv = exchange.fetch_ohlcv(symbol, timeframe='4h', limit=250)
                 if len(ohlcv) < 200:
                     continue
                 
+                checked_count += 1
                 df = pd.DataFrame(ohlcv, columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
                 df['EMA_100'] = df['close'].ewm(span=100, adjust=False).mean()
                 df['EMA_200'] = df['close'].ewm(span=200, adjust=False).mean()
                 
-                # بررسی کندل جاری (آخرین کندل در حال شکل‌گیری) و کندل قبلی (کامل‌شده)
                 current_candle = df.iloc[-1]
                 prev_candle = df.iloc[-2]
                 
@@ -75,18 +77,21 @@ def check_ema_signals():
                     signals_found.append(f"🔹 *{symbol}*\n{details_str}")
                 
                 time.sleep(exchange.rateLimit / 1000)
-            except Exception:
+            except Exception as e:
+                # اگر خطایی روی یک ارز خاص رخ داد رد شویم تا بقیه اسکن شوند
                 continue
 
+        print(f"تعداد ارزهایی که با موفقیت اسکن شدند: {checked_count}")
+
         if signals_found:
-            header = "🚨 گزارش سیگنال‌های فیوچرز LBank 🚨\n\n" + "\n\n".join(signals_found)
+            header = "🚨 **گزارش سیگنال‌های فیوچرز LBank** 🚨\n\n" + "\n\n".join(signals_found)
             send_telegram_message(header)
         else:
-            status_message = "🤖 **گزارش ربات LBank**\n\nبازار ۴ ساعته (کندل جاری و قبلی) اسکن شد. در حال حاضر هیچ برخوردی با EMA 100 یا EMA 200 یافت نشد."
+            status_message = f"🤖 **گزارش ربات LBank**\n\nبازار ۴ ساعته اسکن شد.\nتعداد کل ارزهای بررسی‌شده: {checked_count}\nوضعیت: هیچ برخوردی با EMA 100 یا EMA 200 یافت نشد."
             send_telegram_message(status_message)
 
     except Exception as e:
-        print(f"خطا: {e}")
+        print(f"خطای کلی در اجرای ربات: {e}")
 
 if __name__ == "__main__":
     check_ema_signals()
