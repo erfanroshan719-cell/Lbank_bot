@@ -14,7 +14,6 @@ def send_telegram_message(message):
     
     url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
     
-    # محدودیت تلگرام ۴۰۹۶ کاراکتر است؛ اگر متن طولانی بود، آن را تکه‌تکه می‌کنیم
     max_length = 4000
     if len(message) > max_length:
         parts = [message[i:i+max_length] for i in range(0, len(message), max_length)]
@@ -73,17 +72,17 @@ def check_ema_signals():
                 
                 symbol_messages = []
                 
-                # بررسی کندل جاری
-                if current_candle['low'] <= current_candle['EMA_100']:
-                    symbol_messages.append(f"• کندل جاری: برخورد با EMA 100 📉 (کف: {current_candle['low']}, مقدار: {current_candle['EMA_100']:.2f})")
-                elif current_candle['low'] <= current_candle['EMA_200']:
-                    symbol_messages.append(f"• کندل جاری: برخورد با EMA 200 📉 (کف: {current_candle['low']}, مقدار: {current_candle['EMA_200']:.2f})")
+                # بررسی کندل جاری (برخورد در محدوده کف تا سقف)
+                if current_candle['low'] <= current_candle['EMA_100'] <= current_candle['high']:
+                    symbol_messages.append(f"• کندل جاری: برخورد با EMA 100 📉 (محدوده: {current_candle['low']} تا {current_candle['high']} | EMA: {current_candle['EMA_100']:.2f})")
+                elif current_candle['low'] <= current_candle['EMA_200'] <= current_candle['high']:
+                    symbol_messages.append(f"• کندل جاری: برخورد با EMA 200 📉 (محدوده: {current_candle['low']} تا {current_candle['high']} | EMA: {current_candle['EMA_200']:.2f})")
                 
-                # بررسی کندل قبلی
-                if prev_candle['low'] <= prev_candle['EMA_100']:
-                    symbol_messages.append(f"• کندل قبلی: برخورد با EMA 100 📉 (کف: {prev_candle['low']}, مقدار: {prev_candle['EMA_100']:.2f})")
-                elif prev_candle['low'] <= prev_candle['EMA_200']:
-                    symbol_messages.append(f"• کندل قبلی: برخورد با EMA 200 📉 (کف: {prev_candle['low']}, مقدار: {prev_candle['EMA_200']:.2f})")
+                # بررسی کندل قبلی (برخورد در محدوده کف تا سقف)
+                if prev_candle['low'] <= prev_candle['EMA_100'] <= prev_candle['high']:
+                    symbol_messages.append(f"• کندل قبلی: برخورد با EMA 100 📉 (محدوده: {prev_candle['low']} تا {prev_candle['high']} | EMA: {prev_candle['EMA_100']:.2f})")
+                elif prev_candle['low'] <= prev_candle['EMA_200'] <= prev_candle['high']:
+                    symbol_messages.append(f"• کندل قبلی: برخورد با EMA 200 📉 (محدوده: {prev_candle['low']} تا {prev_candle['high']} | EMA: {prev_candle['EMA_200']:.2f})")
                 
                 if symbol_messages:
                     details_str = "\n".join(symbol_messages)
@@ -96,7 +95,7 @@ def check_ema_signals():
         print(f"تعداد ارزهایی که با موفقیت اسکن شدند: {checked_count}")
 
         if signals_found:
-            header = "🚨 **گزارش سیگنال‌های فیوچرز LBank** 🚨\n\n" + "\n\n".join(signals_found)
+            header = "🚨 **گزارش سیگنال‌های برخورد با EMA (فیوچرز LBank)** 🚨\n\n" + "\n\n".join(signals_found)
             send_telegram_message(header)
         else:
             status_message = f"🤖 **گزارش ربات LBank**\n\nبازار ۴ ساعته اسکن شد.\nتعداد کل ارزهای بررسی‌شده: {checked_count}\nوضعیت: هیچ برخوردی با EMA 100 یا EMA 200 یافت نشد."
