@@ -26,13 +26,17 @@ def send_telegram_message(message):
 
 def check_ema_signals():
     try:
+        # تنظیم صرافی روی بازار فیوچرز (Swap)
         exchange = ccxt.lbank({
             'enableRateLimit': True,
+            'options': {
+                'defaultType': 'swap'
+            }
         })
         
         exchange.load_markets()
         # فیلتر نمادهای فیوچرز USDT
-        symbols = [symbol for symbol in exchange.symbols if '/USDT:USDT' in symbol]
+        symbols = [symbol for symbol in exchange.symbols if '/USDT' in symbol]
         
         print(f"تعداد کل نمادهای فیوچرز یافت شده: {len(symbols)}")
         
@@ -78,7 +82,6 @@ def check_ema_signals():
                 
                 time.sleep(exchange.rateLimit / 1000)
             except Exception as e:
-                # اگر خطایی روی یک ارز خاص رخ داد رد شویم تا بقیه اسکن شوند
                 continue
 
         print(f"تعداد ارزهایی که با موفقیت اسکن شدند: {checked_count}")
