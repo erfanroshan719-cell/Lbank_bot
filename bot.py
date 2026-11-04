@@ -72,17 +72,21 @@ def check_ema_signals():
                 
                 symbol_messages = []
                 
-                # بررسی کندل جاری (برخورد در محدوده کف تا سقف)
+                # بررسی مستقل EMA 100 برای کندل جاری
                 if current_candle['low'] <= current_candle['EMA_100'] <= current_candle['high']:
-                    symbol_messages.append(f"• کندل جاری: برخورد با EMA 100 📉 (محدوده: {current_candle['low']} تا {current_candle['high']} | EMA: {current_candle['EMA_100']:.2f})")
-                elif current_candle['low'] <= current_candle['EMA_200'] <= current_candle['high']:
-                    symbol_messages.append(f"• کندل جاری: برخورد با EMA 200 📉 (محدوده: {current_candle['low']} تا {current_candle['high']} | EMA: {current_candle['EMA_200']:.2f})")
+                    symbol_messages.append(f"• کندل جاری: برخورد با EMA 100 📉 (کف: {current_candle['low']}, سقف: {current_candle['high']} | EMA: {current_candle['EMA_100']:.4f})")
                 
-                # بررسی کندل قبلی (برخورد در محدوده کف تا سقف)
+                # بررسی مستقل EMA 200 برای کندل جاری
+                if current_candle['low'] <= current_candle['EMA_200'] <= current_candle['high']:
+                    symbol_messages.append(f"• کندل جاری: برخورد با EMA 200 📉 (کف: {current_candle['low']}, سقف: {current_candle['HIGH'] if 'HIGH' in current_candle else current_candle['high']}, EMA: {current_candle['EMA_200']:.4f})")
+
+                # بررسی مستقل EMA 100 برای کندل قبلی
                 if prev_candle['low'] <= prev_candle['EMA_100'] <= prev_candle['high']:
-                    symbol_messages.append(f"• کندل قبلی: برخورد با EMA 100 📉 (محدوده: {prev_candle['low']} تا {prev_candle['high']} | EMA: {prev_candle['EMA_100']:.2f})")
-                elif prev_candle['low'] <= prev_candle['EMA_200'] <= prev_candle['high']:
-                    symbol_messages.append(f"• کندل قبلی: برخورد با EMA 200 📉 (محدوده: {prev_candle['low']} تا {prev_candle['high']} | EMA: {prev_candle['EMA_200']:.2f})")
+                    symbol_messages.append(f"• کندل قبلی: برخورد با EMA 100 📉 (کف: {prev_candle['low']}, سقف: {prev_candle['high']} | EMA: {prev_candle['EMA_100']:.4f})")
+                
+                # بررسی مستقل EMA 200 برای کندل قبلی
+                if prev_candle['low'] <= prev_candle['EMA_200'] <= prev_candle['high']:
+                    symbol_messages.append(f"• کندل قبلی: برخورد با EMA 200 📉 (کف: {prev_candle['low']}, سقف: {prev_candle['high']} | EMA: {prev_candle['EMA_200']:.4f})")
                 
                 if symbol_messages:
                     details_str = "\n".join(symbol_messages)
