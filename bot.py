@@ -11,22 +11,32 @@ def send_telegram_message(message):
     if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID:
         print("خطا: توکن یا چت‌آیدی تلگرام تنظیم نشده است.")
         return
+    
     url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
-    payload = {
-        "chat_id": TELEGRAM_CHAT_ID,
-        "text": message,
-        "parse_mode": "Markdown"
-    }
-    try:
-        response = requests.post(url, json=payload)
-        if response.status_code != 200:
-            print(f"خطا در ارسال پیام به تلگرام: {response.text}")
-    except Exception as e:
-        print(f"خطای ارتباط با تلگرام: {e}")
+    
+    # محدودیت تلگرام ۴۰۹۶ کاراکتر است؛ اگر متن طولانی بود، آن را تکه‌تکه می‌کنیم
+    max_length = 4000
+    if len(message) > max_length:
+        parts = [message[i:i+max_length] for i in range(0, len(message), max_length)]
+    else:
+        parts = [message]
+        
+    for part in parts:
+        payload = {
+            "chat_id": TELEGRAM_CHAT_ID,
+            "text": part,
+            "parse_mode": "Markdown"
+        }
+        try:
+            response = requests.post(url, json=payload)
+            if response.status_code != 200:
+                print(f"خطا در ارسال پیام به تلگرام: {response.text}")
+        except Exception as e:
+            print(f"خطای ارتباط با تلگرام: {e}")
+        time.sleep(0.5)
 
 def check_ema_signals():
     try:
-        # تنظیم صرافی روی بازار فیوچرز (Swap)
         exchange = ccxt.lbank({
             'enableRateLimit': True,
             'options': {
@@ -35,7 +45,6 @@ def check_ema_signals():
         })
         
         exchange.load_markets()
-        # فیلتر نمادهای فیوچرز USDT
         symbols = [symbol for symbol in exchange.symbols if '/USDT' in symbol]
         
         print(f"تعداد کل نمادهای فیوچرز یافت شده: {len(symbols)}")
